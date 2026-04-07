@@ -346,5 +346,86 @@
     }
   </style>
 </head>
-
+<!--
+The next section creates section cards for the table of criteria and radar plot display, the chips will act in these sections
+-->
 <body>
+<div class="page-header">
+  <div>
+    <h1>RaDaR WMS Comparison</h1>
+    <h2>Evaluation tool for bioinformatics Workflow Management Systems</h2>
+  </div>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+    <button class="btn" onclick="downloadCSV()">⬇ Export Table</button>
+    <button class="btn" onclick="downloadChart()">⬇ Download Chart</button>
+    <button class="btn btn-danger btn-sm" onclick="clearAllData()">✕ Clear All Data</button>
+  </div>
+</div>
+<div class="main-content">
+  <div class="toolbar">
+    <span class="toolbar-label">Platforms</span>
+    <input id="new-platform-input" type="text" placeholder="Platform name…" maxlength="40"
+           onkeydown="if(event.key==='Enter') addPlatform()" />
+    <button class="btn btn-primary" onclick="addPlatform()">+ Add Platform</button>
+    <div class="platform-chips" id="platform-chips">
+      <!-- Chips are injected here by renderChips() -->
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-title">01 / Evaluation Table</span>
+      <span style="font-size:0.72rem;color:var(--text-muted)">
+        <b style="color:var(--accent2)">Read</b> = documentation review &nbsp;|&nbsp;
+        <b style="color:var(--accent)">Demo</b> = direct evaluation
+      </span>
+    </div>
+    <div class="table-scroll">
+      <table id="eval-table">
+        <thead>
+          <tr id="table-head-row">
+            <!--
+              The first two columns are always present.
+              Additional <th> pairs (Read / Demo) are added
+              for each added platform when renderTableHeader() is called.
+            -->
+            <th>Category</th>
+            <th style="text-align:left">Criterion</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- Rows are injected by renderTableBody() -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- The next section is the RADAR chart -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-title">02 / WMS Comparison Plot</span>
+      <div id="chart-chips" class="platform-chips">
+        <!-- Per-platform toggle chips rendered here by renderChips() -->
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <!--
+        The <canvas> element that Chart.js draws into.
+        Its id="radar-canvas" is referenced in initChart().
+        Wrapped in a div with id="chart-container" so html2canvas
+        can capture just this area for the PNG download.
+      -->
+      <div id="chart-container">
+        <canvas id="radar-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+</div><!-- end of main-content -->
+<!--Add any important info for users here -->
+<div class="info-bar">
+  Data is saved automatically in your browser's localStorage — it persists when you close and reopen the page.
+</div>
+<!-- 
+  JAVASCRIPT - the next sections provide the scripts to make the app work including the list of evaluation criteria, scoring the platforms, and drawing plots.
+  -->
+  
+</body>
+</html>
