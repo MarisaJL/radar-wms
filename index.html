@@ -885,6 +885,8 @@ function renderChips() {
 Made with Chart.js
 Chart is first initiated then updated when changes are made.
 */
+let radarChart = null;  // holds the Chart.js instance
+
 function initChart() {
   const ctx = document.getElementById("radar-canvas").getContext("2d");
  
