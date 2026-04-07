@@ -308,7 +308,7 @@
     .score-select.val-nd   { border-color: var(--accent4); color: var(--accent4); }
     .score-select.val-none { color: var(--text-muted); }
 
-    /* Demo-score cells that were auto-filled from the initial Read scores are lightly indicated */
+    /* final Demo-score cells that were auto-filled from the initial Read scores are lightly indicated */
     .score-select.auto-fill { background: rgba(63,185,80,0.06); }
 
     /* ── SCORE SUMMARY ROW at bottom of each category ── */
@@ -382,15 +382,7 @@ The next section creates section cards for the table of criteria and radar plot 
     <div class="table-scroll">
       <table id="eval-table">
         <thead>
-          <tr id="table-head-row">
-            <!--
-              The first two columns are always present.
-              Additional <th> pairs (Read / Demo) are added
-              for each added platform when renderTableHeader() is called.
-            -->
-            <th>Category</th>
-            <th style="text-align:left">Criterion</th>
-          </tr>
+          <!-- renderTableHeader() replaces all rows in <thead> when platforms added-->
         </thead>
         <tbody id="table-body">
           <!-- Rows are injected by renderTableBody() -->
@@ -429,6 +421,7 @@ The next section creates section cards for the table of criteria and radar plot 
 <script>
   /* 
   1. Category Names and Criteria Definitions for Evaluation Table
+  ---------------------------------------------------------------------------------------------
   CATEGORIES is the lit of evaluation criteria by category
   Structured as:
     name (to display as the category header and radar plot label)
@@ -488,6 +481,7 @@ The next section creates section cards for the table of criteria and radar plot 
 ];
   /*
   2. Colour Palette for Radar Plots
+  --------------------------------------------------------------------------------------
   Plot will cycle through these colours for the platforms added to the plot - CSS colour strings used for chip dots and Cahrt.js dataset borderColor / backgroundColor
   */
   const PLATFORM_COLORS = [
@@ -497,17 +491,20 @@ The next section creates section cards for the table of criteria and radar plot 
 ];
   /*
   3. Application State
+  --------------------------------------------------------------------------------------
   This is the saved state of the app
   platforms - array of platforms objects: {id, name, color, hiddenFromPlot}
   scores - nested object: 
-    scores[platformId][categoryIndex][criterionIndex] = {read, demo} where read/demo are one of: "yes" "no" "nd" ""
+    scores[platformId][categoryIndex][criterionIndex] = {initial, final} where initial/final are one of: "yes" "no" "nd" ""
   */
   let state = {
   platforms: [],
   scores: {}
 };
   /*
-  4. Local Storage - to allow users to save the information they've entered between visits
+  4. Local Storage
+  -----------------------------------------------------------------------------------------
+  Allows users to save the information they've entered between visits
   */
   const STORAGE_KEY = "wf_comparison_v1";
   /* Save the entire state object to localStorage as JSON. */
@@ -527,6 +524,7 @@ function loadState() {
 }
   /*
   5. Adding or Removing Platforms
+  -------------------------------------------------------------------------------------------
   This section gives each platform an id, allows users to add more platforms with their own columns in the table, and to remove platforms.
   Also adds option to hide platforms from the radar plot but retain the scores.
   */
@@ -541,7 +539,7 @@ function loadState() {
   const color = PLATFORM_COLORS[state.platforms.length % PLATFORM_COLORS.length];
     
     const scoreMatrix = CATEGORIES.map(cat =>
-    cat.criteria.map(() => ({ read: "", demo: "" }))
+    cat.criteria.map(() => ({ initial: "", final: "" }))
   );
 
   state.platforms.push({ id, name, color, hiddenFromPlot: false });
@@ -570,8 +568,425 @@ function togglePlotVisibility(id) {
 }
   /*
   6. Scores
+  ---------------------------------------------------------------------------------------
   Functions for getting and setting the scores.
   */
+/*
+ * Get the score object for a specific cell.
+ * catIdx  — index into CATEGORIES array
+ * criIdx  — index into category.criteria array
+ */
+function getScore(platformId, catIdx, criIdx) {
+  return state.scores[platformId][catIdx][criIdx];
+}
+
+/*
+ * Called when the user changes an INITIAL score dropdown.
+ * 1. Saves the new initial value.
+ * 2. If initial is "yes" or "no", copies it into final automatically
+ *    (auto-fill behaviour) unless the final cell has already been
+ *    manually changed to something different from the previous auto-value.
+ * 3. If initial is "nd" or blank, clears the final value so the user
+ *    must decide it themselves.
+ */
+function setInitialScore(platformId, catIdx, criIdx, value) {
+  const cell = getScore(platformId, catIdx, criIdx);
+  cell.initial = value;
+
+  // Auto-populate final score from initial if it's yes/no
+  if (value === "yes" || value === "no") {
+    cell.final = value;
+  } else {
+    // nd or blank → clear final so user fills it in manually
+    cell.final = "";
+  }
+
+  saveState();
+  // Refresh only the affected final-score cell (cheaper than full re-render)
+  refreshFinalCell(platformId, catIdx, criIdx);
+  updateScoreSummaryRow(catIdx);
+  updateChart();
+}
+
+/*
+ * Called when the user manually changes a FINAL score dropdown.
+ * The user is allowed to override whatever was auto-filled.
+ */
+function setFinalScore(platformId, catIdx, criIdx, value) {
+  getScore(platformId, catIdx, criIdx).final = value;
+  saveState();
+  // Re-colour the select element to match its new value
+  const sel = document.getElementById(finalCellId(platformId, catIdx, criIdx));
+  if (sel) applySelectColor(sel, value);
+  updateScoreSummaryRow(catIdx);
+  updateChart();
+}
+
+/* Deterministic DOM id for the final-score <select> of a given cell. */
+function finalCellId(platformId, catIdx, criIdx) {
+  return `f_${platformId}_${catIdx}_${criIdx}`;
+}
+
+/*
+ * After an initial-score change, update the corresponding final-score
+ * <select> element's value and colour without rebuilding the whole table.
+ */
+function refreshFinalCell(platformId, catIdx, criIdx) {
+  const sel = document.getElementById(finalCellId(platformId, catIdx, criIdx));
+  if (!sel) return;
+  const { initial, final } = getScore(platformId, catIdx, criIdx);
+  sel.value = final;
+  // Mark as auto-filled if initial and final match and initial is yes/no
+  sel.classList.toggle("auto-fill", (initial === "yes" || final === "no") && initial === final);
+  applySelectColor(sel, final);
+}
+
+/*
+ * Apply a CSS class to a <select> based on its value so the
+ * Yes / No / ND colours are applied.
+ */
+function applySelectColor(sel, value) {
+  sel.classList.remove("val-yes", "val-no", "val-nd", "val-none");
+  if (value === "yes")  sel.classList.add("val-yes");
+  else if (value === "no")   sel.classList.add("val-no");
+  else if (value === "nd")   sel.classList.add("val-nd");
+  else                       sel.classList.add("val-none");
+}
+
+  /*
+   7. Calculate the Score
+   --------------------------------------------------------------------
+   For each platform, count how many FINAL (Demo) scores are "Yes" in each category
+   Returns an integer 0-5 for each category
+  */
+function categoryScore(platformId, catIdx) {
+  return state.scores[platformId][catIdx]
+    .filter(cell => cell.final === "yes").length;
+}
+
+  /* Return an array of scores across all categories for a platform. */
+function allCategoryScores(platformId) {
+  return CATEGORIES.map((_, catIdx) => categoryScore(platformId, catIdx));
+}
+  /*
+  8. Render the Evaluation Table
+  --------------------------------------------------------------------
+  The first two columns are static and show the category and criteria
+  Then we add columns to show the platform names, each with two sub-columns for the Read and Demo scores
+  renderTableHeader() rebuilds the header when platforms are added - over two rows to allow for the subheaders
+  */
+function renderTableHeader() {
+const thead = document.querySelector("#eval-table thead");
+thead.innerHTML = "";
+
+const row1 = document.createElement("tr");
+ 
+const thCat = document.createElement("th");
+thCat.textContent = "Category";
+thCat.rowSpan = 2;
+row1.appendChild(thCat);
+
+const thCri = document.createElement("th");
+thCri.textContent = "Criterion";
+thCri.rowSpan = 2;
+thCri.style.textAlign = "left";
+row1.appendChild(thCri);
+
+state.platforms.forEach(p => {
+    const th = document.createElement("th");
+    th.colSpan = 2;
+    th.style.color = p.color;
+    th.style.borderLeft = `2px solid ${p.color}33`;
+    th.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem">
+        <span style="width:7px;height:7px;border-radius:50%;background:${p.color};display:inline-block"></span>
+        ${escHtml(p.name)}
+        <button class="btn btn-sm btn-danger chip-btn"
+                onclick="removePlatform('${p.id}')"
+                title="Remove platform">✕</button>
+      </div>`;
+    row1.appendChild(th);
+  });
+ 
+  thead.appendChild(row1);
+
+  const row2 = document.createElement("tr");
+ 
+  state.platforms.forEach(p => {
+    const thI = document.createElement("th");
+    thI.textContent = "Read";
+    thI.style.borderLeft = `2px solid ${p.color}33`;
+    thI.style.color = "var(--accent2)";
+    row2.appendChild(thI);
+ 
+    const thF = document.createElement("th");
+    thF.textContent = "Demo";
+    thF.style.color = "var(--accent)";
+    row2.appendChild(thF);
+  });
+ 
+  thead.appendChild(row2);
+}
+
+function renderTableBody() {
+  const tbody = document.getElementById("table-body");
+  tbody.innerHTML = "";
+ 
+  CATEGORIES.forEach((cat, catIdx) => {
+ 
+    // ── Category header row ──────────────────────────────────────────
+    const headerRow = document.createElement("tr");
+    headerRow.classList.add("cat-header");
+    const headerTd = document.createElement("td");
+    headerTd.colSpan = 2 + state.platforms.length * 2;
+    headerTd.textContent = `▸ ${cat.name}`;
+    headerTd.style.color = "var(--accent)";
+    headerRow.appendChild(headerTd);
+    tbody.appendChild(headerRow);
+ 
+    // ── One row per criterion ────────────────────────────────────────
+    cat.criteria.forEach((criterion, criIdx) => {
+      const tr = document.createElement("tr");
+ 
+      // Column 1: category name (small, muted — repeated for sticky column)
+      const tdCat = document.createElement("td");
+      tdCat.textContent = cat.name;
+      tdCat.style.color = "var(--text-muted)";
+      tdCat.style.fontSize = "0.68rem";
+      tr.appendChild(tdCat);
+ 
+      // Column 2: criterion text
+      const tdCri = document.createElement("td");
+      tdCri.textContent = criterion;
+      tr.appendChild(tdCri);
+ 
+      // Two columns per platform: Initial select + Final select
+      state.platforms.forEach(p => {
+        const cell = getScore(p.id, catIdx, criIdx);
+ 
+        // ── Initial score cell ─────────────────────────────────────
+        const tdI = document.createElement("td");
+        tdI.style.borderLeft = `2px solid ${p.color}33`;
+        tdI.style.textAlign = "center";
+        const selI = buildSelect(["", "yes", "no", "nd"], cell.initial);
+        applySelectColor(selI, cell.initial);
+        selI.onchange = e => setInitialScore(p.id, catIdx, criIdx, e.target.value);
+        tdI.appendChild(selI);
+        tr.appendChild(tdI);
+ 
+        // ── Final score cell ───────────────────────────────────────
+        const tdF = document.createElement("td");
+        tdF.style.textAlign = "center";
+        const selF = buildSelect(["", "yes", "no"], cell.final);
+        selF.id = finalCellId(p.id, catIdx, criIdx);
+        // Auto-fill indicator: light green tint if copied from initial
+        const isAutoFilled = (cell.initial === "yes" || cell.initial === "no") && cell.initial === cell.final;
+        if (isAutoFilled) selF.classList.add("auto-fill");
+        applySelectColor(selF, cell.final);
+        selF.onchange = e => setFinalScore(p.id, catIdx, criIdx, e.target.value);
+        tdF.appendChild(selF);
+        tr.appendChild(tdF);
+      });
+ 
+      tbody.appendChild(tr);
+    });
+ 
+    // ── Score summary row (bottom of each category) ─────────────────
+    const scoreRow = document.createElement("tr");
+    scoreRow.classList.add("score-row");
+    scoreRow.id = `score-row-${catIdx}`;
+ 
+    const tdLabel = document.createElement("td");
+    tdLabel.colSpan = 2;
+    tdLabel.textContent = "Category Score";
+    tdLabel.style.textAlign = "right";
+    scoreRow.appendChild(tdLabel);
+ 
+    state.platforms.forEach(p => {
+      // Blank spacer for Initial column
+      const tdBlank = document.createElement("td");
+      scoreRow.appendChild(tdBlank);
+      // Score for Final column
+      const tdScore = document.createElement("td");
+      const score = categoryScore(p.id, catIdx);
+      tdScore.textContent = `${score} / ${cat.criteria.length}`;
+      tdScore.id = `score_${p.id}_${catIdx}`;
+      tdScore.style.color = scoreColor(score, cat.criteria.length);
+      scoreRow.appendChild(tdScore);
+    });
+ 
+    tbody.appendChild(scoreRow);
+  });
+}
+
+/*Colour in the total scores by value */
+function scoreColor(score, max) {
+  const pct = score / max;
+  if (pct >= 0.8) return "var(--accent2)";
+  if (pct >= 0.4) return "var(--accent4)";
+  return "var(--accent3)";
+}
+
+  /*Update only the changed scores/totals if a single change is made */
+function updateScoreSummaryRow(catIdx) {
+  state.platforms.forEach(p => {
+    const td = document.getElementById(`score_${p.id}_${catIdx}`);
+    if (!td) return;
+    const score = categoryScore(p.id, catIdx);
+    td.textContent = `${score} / ${CATEGORIES[catIdx].criteria.length}`;
+    td.style.color = scoreColor(score, CATEGORIES[catIdx].criteria.length);
+  });
+}
+
+/*Options to select */
+function buildSelect(options, selected) {
+  const sel = document.createElement("select");
+  sel.classList.add("score-select");
+  const labels = { "": "–", yes: "Yes", no: "No", nd: "ND" };
+  options.forEach(val => {
+    const opt = document.createElement("option");
+    opt.value = val;
+    opt.textContent = labels[val] ?? val;
+    if (val === selected) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  return sel;
+}
+
+/*
+9. Platform Chips
+-----------------------------------------------------------
+These appear in the toolbar and under the chart title to show the platform name, colour, and options to show/hide on plot or remove platform completely.
+*/
+function renderChips() {
+  const container = document.getElementById("chart-chips");
+  container.innerHTML = "";
+ 
+  state.platforms.forEach(p => {
+    const chip = document.createElement("span");
+    chip.classList.add("chip");
+    if (p.hiddenFromPlot) chip.classList.add("hidden-from-plot");
+    chip.style.borderColor = p.color + "80";
+    chip.style.color = p.color;
+ 
+    chip.innerHTML = `
+      <span class="chip-dot" style="background:${p.color}"></span>
+      <span>${escHtml(p.name)}</span>
+      <button class="chip-btn" title="${p.hiddenFromPlot ? 'Show on chart' : 'Hide from chart'}"
+              onclick="togglePlotVisibility('${p.id}')">${p.hiddenFromPlot ? "◌" : "●"}</button>
+      <button class="chip-btn btn-danger" title="Remove platform"
+              onclick="removePlatform('${p.id}')">✕</button>
+    `;
+    container.appendChild(chip);
+  });
+}
+/* 
+10. Radar Chart
+-----------------------------------------------------------------------
+Made with Chart.js
+Chart is first initiated then updated when changes are made.
+*/
+function initChart() {
+  const ctx = document.getElementById("radar-canvas").getContext("2d");
+ 
+  // ── Chart.js configuration ──────────────────────────────────────────
+  radarChart = new Chart(ctx, {
+    type: "radar",
+ 
+    data: {
+      // Labels = category names, displayed around the radar axes
+      labels: CATEGORIES.map(c => c.name),
+      datasets: []   // populated by updateChart()
+    },
+ 
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+ 
+      // Animation settings
+      animation: { duration: 400, easing: "easeInOutQuart" },
+ 
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            font: { family: "'Space Mono', monospace", size: 11 },
+            color: "#8b949e",
+            boxWidth: 10
+          }
+        },
+        tooltip: {
+          callbacks: {
+            // Show "Category: X / N" in the tooltip
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} / ${CATEGORIES[ctx.dataIndex].criteria.length}`
+          }
+        }
+      },
+ 
+      scales: {
+        r: {
+          // Radar scale goes from 0 to max criteria per category
+          min: 0,
+          max: Math.max(...CATEGORIES.map(c => c.criteria.length)),
+          ticks: {
+            stepSize: 1,
+            font: { family: "'Space Mono', monospace", size: 9 },
+            color: "#8b949e",
+            backdropColor: "transparent"
+          },
+          pointLabels: {
+            font: { family: "'Space Mono', monospace", size: 11 },
+            color: "#e6edf3"
+          },
+          grid:      { color: "#30363d" },
+          angleLines: { color: "#30363d" }
+        }
+      }
+    }
+  });
+ 
+  updateChart();  // populate with current state immediately
+}
+ 
+/**
+ * updateChart()
+ * Rebuilds the datasets array from current state and asks
+ * Chart.js to animate to the new data.
+ */
+function updateChart() {
+  if (!radarChart) return;
+ 
+  radarChart.data.datasets = state.platforms
+    .filter(p => !p.hiddenFromPlot)   // respect visibility toggle
+    .map(p => {
+      const scores = allCategoryScores(p.id);
+      return {
+        label: p.name,
+        data: scores,
+        borderColor: p.color,
+        backgroundColor: p.color + "30",   // 30 = ~19% opacity hex
+        pointBackgroundColor: p.color,
+        pointBorderColor: "#0d1117",
+        pointRadius: 4,
+        borderWidth: 2
+      };
+    });
+ 
+  radarChart.update();
+}
+
+/*
+11. Master Render Function
+------------------------------------------------------------
+Renders the entire UI from the state - including afer platforms are added or removed.
+The refreshFinalCell, updateScoreSummaryRow and updateChart functions can update smaller changes faster.
+*/
+function render() {
+  renderTableHeader();
+  renderTableBody();
+  renderChips();
+  updateChart();
+}
 </script>
 </body>
 </html>
