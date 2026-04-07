@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RaDaR WMS Comparison</title>
+</head>
+
+  <!--
+  This is an interactive input table and radar plot to support users applying the RaDaR evaluation method for selecting a bioinformatics WMS.
+  Chart.js is used to draw the radar plot
+  html2canvas is used to download the radar plot as a PBG
+  -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!--
+  The next section sets up and styles the page
+  Google Fonts are used
+  -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /*
+    CSS Custom colours (edit these to retheme)
+    */
+    :root {
+      --bg:          #060645;   /* page background                     */
+      --surface:     #1c46c0;   /* card / table background             */
+      --surface2:    #2f54c0;   /* slightly lighter surface            */
+      --border:      #4363c2;   /* subtle borders                      */
+      --accent:      #66eefa;   /* primary blue accent                 */
+      --accent2:     #7dffd3;   /* green accent (Yes)                  */
+      --accent3:     #ff8a77;   /* red accent  (No)                    */
+      --accent4:     #fff388;   /* amber accent (ND)                   */
+      --text:        #e6edf3;   /* primary text                        */
+      --text-muted:  #8b949e;   /* secondary / label text              */
+      --mono:        'Space Mono', monospace;
+      --sans:        'DM Sans', sans-serif;
+      --radius:      8px;
+    }
+    /*
+    Set up the styles for different sections of text
+    */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    h1 {
+      font-family: var(--mono);
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      letter-spacing: -0.03em;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    h2 {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-bottom: 2rem;
+    }
+    /*
+    Layout of the page
+    */
+    .page-header {
+      max-width: 1400px;
+      margin: 0 auto 2rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    /*
+    Button styles
+    */
+    .btn {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--surface2);
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #060645;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .btn-primary:hover { background: #66eefa; border-color: #66eefa; color: #060645; }
+
+    .btn-danger { border-color: var(--accent3); color: var(--accent3); }
+    .btn-danger:hover { background: var(--accent3); color: #060645; }
+
+    .btn-sm { font-size: 0.65rem; padding: 0.25rem 0.55rem; }
+    /*
+    Add a toolbar section for options such as adding new platforms
+    */
+    .toolbar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-right: 0.25rem;
+    }
+
+    #new-platform-input {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      width: 180px;
+      transition: border-color 0.15s;
+    }
+    #new-platform-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    /*
+    Add interactive elements (chips) to be shown in the toolbar and chart legend areas
+    */
+    .platform-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      border: 1px solid;
+      cursor: default;
+      transition: opacity 0.15s;
+    }
+
+    .chip.hidden-from-plot { opacity: 0.4; }
+
+    .chip-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .chip-btn {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: 0.65rem;
+      padding: 0 0.1rem;
+      opacity: 0.6;
+      line-height: 1;
+    }
+    .chip-btn:hover { opacity: 1; }
+    /*
+    Style the evaluation table section and the main table with columns for the category, criteria, Read and Demo scores for the WMS.
+    Each row is one criterion.
+    */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+
+    /* ── Horizontal scroll wrapper for wide tables, table could become very wide when evaluating multiple platforms ── */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    #eval-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.78rem;
+    }
+
+    #eval-table th {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    /* Stick the first two columns (category + criterion) to remain visible when scrolling */
+    #eval-table th:nth-child(1),
+    #eval-table td:nth-child(1) {
+      position: sticky;
+      left: 0;
+      background: var(--surface2);
+      z-index: 2;
+      min-width: 110px;
+    }
+
+    #eval-table th:nth-child(2),
+    #eval-table td:nth-child(2) {
+      position: sticky;
+      left: 110px;        /* must match min-width of col 1 */
+      background: var(--surface);
+      z-index: 2;
+      min-width: 200px;
+      max-width: 260px;
+    }
+
+    #eval-table td {
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    /* Colour-coded category rows */
+    .cat-header td {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface2) !important;
+    }
+
+    /* Highlight alternating criteria rows very subtly */
+    #eval-table tbody tr:not(.cat-header):hover td {
+      background: rgba(102, 238, 250, 1);
+    }
+
+    /* ── SELECT CELLS (Yes / No / ND dropdowns) ── */
+    .score-select {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 0.2rem 0.3rem;
+      cursor: pointer;
+      width: 62px;
+      text-align: center;
+      transition: border-color 0.1s;
+    }
+    .score-select:focus { outline: none; border-color: var(--accent); }
+
+    /* Colour coding for option values */
+    .score-select.val-yes  { border-color: var(--accent2); color: var(--accent2); }
+    .score-select.val-no   { border-color: var(--accent3); color: var(--accent3); }
+    .score-select.val-nd   { border-color: var(--accent4); color: var(--accent4); }
+    .score-select.val-none { color: var(--text-muted); }
+
+    /* Demo-score cells that were auto-filled from the initial Read scores are lightly indicated */
+    .score-select.auto-fill { background: rgba(63,185,80,0.06); }
+
+    /* ── SCORE SUMMARY ROW at bottom of each category ── */
+    .score-row td {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--surface2) !important;
+      color: var(--accent2);
+      padding: 0.4rem 0.75rem;
+      text-align: center;
+    }
+    /*
+    Style the RADAR chart section
+    */
+    .chart-wrapper {
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    #radar-canvas {
+      max-width: 600px;
+      max-height: 600px;
+      width: 100% !important;
+    }
+    /*
+    Add and style a Footer to provide extra info for users
+    */
+    .info-bar {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+<body>
