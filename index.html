@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RaDaR WMS Comparison</title>
-</head>
 
   <!--
   This is an interactive input table and radar plot to support users applying the RaDaR evaluation method for selecting a bioinformatics WMS.
@@ -422,7 +421,7 @@ The next section creates section cards for the table of criteria and radar plot 
   /* 
   1. Category Names and Criteria Definitions for Evaluation Table
   ---------------------------------------------------------------------------------------------
-  CATEGORIES is the lit of evaluation criteria by category
+  CATEGORIES is the list of evaluation criteria by category
   Structured as:
     name (to display as the category header and radar plot label)
     criteria (array of five strings, each one is a criterion/row)
@@ -528,7 +527,7 @@ function loadState() {
   This section gives each platform an id, allows users to add more platforms with their own columns in the table, and to remove platforms.
   Also adds option to hide platforms from the radar plot but retain the scores.
   */
-  function uid() { return "p_" + Date.now(); }
+  function uid() { return "p_" + Date.now() + "_" + Math.random().toString(36).slice(2); }
 
   function addPlatform() {
   const input = document.getElementById("new-platform-input");
@@ -637,7 +636,7 @@ function refreshFinalCell(platformId, catIdx, criIdx) {
   const { initial, final } = getScore(platformId, catIdx, criIdx);
   sel.value = final;
   // Mark as auto-filled if initial and final match and initial is yes/no
-  sel.classList.toggle("auto-fill", (initial === "yes" || final === "no") && initial === final);
+  sel.classList.toggle("auto-fill", (initial === "yes" || initial === "no") && initial === final);
   applySelectColor(sel, final);
 }
 
@@ -994,6 +993,9 @@ function render() {
 To download the table as a CSV file or the radar chart as a PNG
 Uses html2canvas to produce the PNG
 */
+function downloadCSV() {
+  const rows = [];
+  
 const header = ["Category", "Criterion"];
   state.platforms.forEach(p => {
     header.push(`${p.name} - Initial`, `${p.name} - Final`);
