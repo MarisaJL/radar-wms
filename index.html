@@ -987,6 +987,111 @@ function render() {
   renderChips();
   updateChart();
 }
+
+/*
+12. Download Functions
+----------------------------------------------------------------
+To download the table as a CSV file or the radar chart as a PNG
+Uses html2canvas to produce the PNG
+*/
+const header = ["Category", "Criterion"];
+  state.platforms.forEach(p => {
+    header.push(`${p.name} - Initial`, `${p.name} - Final`);
+  });
+  rows.push(header);
+ 
+  CATEGORIES.forEach((cat, catIdx) => {
+    cat.criteria.forEach((cri, criIdx) => {
+      const row = [cat.name, cri];
+      state.platforms.forEach(p => {
+        const cell = getScore(p.id, catIdx, criIdx);
+        row.push(cell.initial || "", cell.final || "");
+      });
+      rows.push(row);
+    });
+ 
+    // Blank separator row between categories
+    rows.push([]);
+ 
+    // Score summary row
+    const scoreRow = ["", "CATEGORY SCORE"];
+    state.platforms.forEach(p => {
+      scoreRow.push("", `\t${categoryScore(p.id, catIdx)} / ${cat.criteria.length}`);
+    });
+    rows.push(scoreRow);
+    rows.push([]);
+  });
+ 
+  // Convert to CSV string (handles commas in values via quoting)
+  const csv = "\uFEFF" + rows.map(r =>
+    r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")
+  ).join("\r\n");
+ 
+  triggerDownload("workflow_comparison.csv", "text/csv;charset=utf-8;", csv);
+}
+
+function downloadChart() {
+  const el = document.getElementById("chart-container");
+  html2canvas(el, { backgroundColor: "#161b22", scale: 2 }).then(canvas => {
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "workflow_radar.png";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  });
+}
+
+/* Generic helper to trigger a browser file download from a string. */
+function triggerDownload(filename, mimeType, content) {
+  const blob = new Blob([content], { type: mimeType });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/*
+13. Utility
+----------------------------------------------------------
+Functions to escape HTML special characters in the platform names from users and to wipe data
+*/
+function escHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function clearAllData() {
+  if (!confirm("Clear ALL platforms and scores? This cannot be undone.")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = { platforms: [], scores: {} };
+  render();
+}
+
+/*
+14. Initialisation
+------------------------------------------------------------------------
+On page load:
+  1. Rehydrate state from localStorage (if any saved data exists).
+  2. Render the table and chips from that state.
+  3. Initialise the Chart.js radar chart.
+*/
+document.addEventListener("DOMContentLoaded", () => {
+  loadState();    // 1. restore saved data
+  render();       // 2. build table
+  initChart();    // 3. create radar chart
+});
+  
 </script>
+  
 </body>
 </html>
