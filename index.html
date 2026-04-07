@@ -426,6 +426,152 @@ The next section creates section cards for the table of criteria and radar plot 
 <!-- 
   JAVASCRIPT - the next sections provide the scripts to make the app work including the list of evaluation criteria, scoring the platforms, and drawing plots.
   -->
-  
+<script>
+  /* 
+  1. Category Names and Criteria Definitions for Evaluation Table
+  CATEGORIES is the lit of evaluation criteria by category
+  Structured as:
+    name (to display as the category header and radar plot label)
+    criteria (array of five strings, each one is a criterion/row)
+  */
+  const CATEGORIES = [
+  {
+    name: "Sustainability",
+    criteria: [
+      "Available for at least 1 year & maintained in last 6 months",
+      "Available for at least 5 years & maintained in last 12 months",
+      "Evidence of active user/developer community (e.g. forum, repo activity in last month)",
+      "Evidence of substantial user/contributor base (e.g. reported numbers, repo metrics)",
+      "Evidence of adoption in research/practice (e.g. citations, case studies)"
+    ]
+  },
+  {
+    name: "Usability",
+    criteria: [
+      "Users can create, edit and reuse workflows",
+      "Progress of workflows can be monitored",
+      "Error reports identify failed step and provide diagnostic information",
+      "No-code interface for workflow creation and use",
+      "Both no-code and code-based interfaces available"
+    ]
+  },
+  {
+    name: "Learnability",
+    criteria: [
+      "Documentation is available",
+      "Introductory tutorial or Getting Started advice available",
+      "Tools/components linked to relevant documentation",
+      "Domain or task specific training materials available",
+      "Interactive learning support available (e.g. forum, courses)"
+    ]
+  },
+  {
+    name: "Reproducibility",
+    criteria: [
+      "Details of analysis are recorded",
+      "Executable records of workflows are available",
+      "Workflows can be versioned",
+      "Human-readable reports can be generated",
+      "Previous versions of tools or execution environment are available"
+    ]
+  },
+  {
+    name: "FAIRness",
+    criteria: [
+      "Workflows and other items can be exported",
+      "Metadata can be added to data and workflows (e.g. tags, comments)",
+      "Guidance or tools provided to support FAIRification",
+      "Interoperable workflows can be imported/exported",
+      "Workflows can be shared through official/community library"
+    ]
+  }
+];
+  /*
+  2. Colour Palette for Radar Plots
+  Plot will cycle through these colours for the platforms added to the plot - CSS colour strings used for chip dots and Cahrt.js dataset borderColor / backgroundColor
+  */
+  const PLATFORM_COLORS = [
+  "#58a6ff", "#3fb950", "#f78166", "#d29922",
+  "#bc8cff", "#39d353", "#ff7b72", "#ffa657",
+  "#79c0ff", "#56d364"
+];
+  /*
+  3. Application State
+  This is the saved state of the app
+  platforms - array of platforms objects: {id, name, color, hiddenFromPlot}
+  scores - nested object: 
+    scores[platformId][categoryIndex][criterionIndex] = {read, demo} where read/demo are one of: "yes" "no" "nd" ""
+  */
+  let state = {
+  platforms: [],
+  scores: {}
+};
+  /*
+  4. Local Storage - to allow users to save the information they've entered between visits
+  */
+  const STORAGE_KEY = "wf_comparison_v1";
+  /* Save the entire state object to localStorage as JSON. */
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+/*
+ * Load state from localStorage.
+ * If nothing is stored yet, the default empty state is kept.
+ */
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try { state = JSON.parse(raw); } catch(e) { console.warn("Could not parse saved state."); }
+  }
+}
+  /*
+  5. Adding or Removing Platforms
+  This section gives each platform an id, allows users to add more platforms with their own columns in the table, and to remove platforms.
+  Also adds option to hide platforms from the radar plot but retain the scores.
+  */
+  function uid() { return "p_" + Date.now(); }
+
+  function addPlatform() {
+  const input = document.getElementById("new-platform-input");
+  const name = input.value.trim();
+  if (!name) return;
+
+  const id    = uid();
+  const color = PLATFORM_COLORS[state.platforms.length % PLATFORM_COLORS.length];
+    
+    const scoreMatrix = CATEGORIES.map(cat =>
+    cat.criteria.map(() => ({ read: "", demo: "" }))
+  );
+
+  state.platforms.push({ id, name, color, hiddenFromPlot: false });
+  state.scores[id] = scoreMatrix;
+
+  input.value = "";
+  saveState();
+  render();
+} 
+
+function removePlatform(id) {
+  const p = state.platforms.find(p => p.id === id);
+  if (!confirm(`Remove "${p.name}" from the evaluation entirely?`)) return;
+  state.platforms = state.platforms.filter(p => p.id !== id);
+  delete state.scores[id];
+  saveState();
+  render();
+}
+
+function togglePlotVisibility(id) {
+  const p = state.platforms.find(p => p.id === id);
+  if (p) p.hiddenFromPlot = !p.hiddenFromPlot;
+  saveState();
+  updateChart();         // refresh the chart only
+  renderChips();
+}
+  /*
+  6. Scores
+  Functions for getting and setting the scores.
+  */
+</script>
 </body>
 </html>
