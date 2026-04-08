@@ -23,14 +23,14 @@
     CSS Custom colours (edit these to retheme)
     */
     :root {
-      --bg:          #060645;   /* page background                     */
-      --surface:     #1c46c0;   /* card / table background             */
-      --surface2:    #2f54c0;   /* slightly lighter surface            */
-      --border:      #4363c2;   /* subtle borders                      */
-      --accent:      #66eefa;   /* primary blue accent                 */
-      --accent2:     #7dffd3;   /* green accent (Yes)                  */
-      --accent3:     #ff8a77;   /* red accent  (No)                    */
-      --accent4:     #fff388;   /* amber accent (ND)                   */
+      --bg:          #0d1117;   /* page background                     */
+      --surface:     #161b22;   /* card / table background             */
+      --surface2:    #21262d;   /* slightly lighter surface            */
+      --border:      #30363d;   /* subtle borders                      */
+      --accent:      #58a6ff;   /* primary blue accent                 */
+      --accent2:     #3fb950;   /* green accent (Yes)                  */
+      --accent3:     #f78166;   /* red accent  (No)                    */
+      --accent4:     #d29922;   /* amber accent (ND)                   */
       --text:        #e6edf3;   /* primary text                        */
       --text-muted:  #8b949e;   /* secondary / label text              */
       --mono:        'Space Mono', monospace;
@@ -282,7 +282,7 @@
 
     /* Highlight alternating criteria rows very subtly */
     #eval-table tbody tr:not(.cat-header):hover td {
-      background: rgba(102, 238, 250, 1);
+      background: rgba(88,166,255,0.04);
     }
 
     /* ── SELECT CELLS (Yes / No / ND dropdowns) ── */
@@ -392,10 +392,13 @@ The next section creates section cards for the table of criteria and radar plot 
   <!-- The next section is the RADAR chart -->
   <div class="section-card">
     <div class="section-header">
-      <span class="section-title">02 / WMS Comparison Plot</span>
+      <span class="section-title">02 / Radar Plot</span>
       <div id="chart-chips" class="platform-chips">
         <!-- Per-platform toggle chips rendered here by renderChips() -->
       </div>
+      <span style="font-size:0.72rem;color:var(--text-muted)">
+        click WMS names on chart to hide/show
+      </span>
     </div>
     <div class="chart-wrapper">
       <!--
@@ -481,7 +484,7 @@ The next section creates section cards for the table of criteria and radar plot 
   /*
   2. Colour Palette for Radar Plots
   --------------------------------------------------------------------------------------
-  Plot will cycle through these colours for the platforms added to the plot - CSS colour strings used for chip dots and Cahrt.js dataset borderColor / backgroundColor
+  Plot will cycle through these colours for the platforms added to the plot - CSS colour strings used for chip dots and Chart.js dataset borderColor / backgroundColor
   */
   const PLATFORM_COLORS = [
   "#58a6ff", "#3fb950", "#f78166", "#d29922",
