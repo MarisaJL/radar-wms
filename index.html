@@ -37,6 +37,19 @@
       --sans:        'DM Sans', sans-serif;
       --radius:      8px;
     }
+
+    body.light-theme {
+      --bg:          #ffffff;
+      --surface:     #f6f8fa;
+      --surface2:    #eaeef2;
+      --border:      #d0d7de;
+      --accent:      #0969da;
+      --accent2:     #1a7f37;
+      --accent3:     #cf222e;
+      --accent4:     #9a6700;
+      --text:        #1f2328;
+      --text-muted:  #656d76;
+    }
     /*
     Set up the styles for different sections of text
     */
@@ -245,6 +258,19 @@
       text-align: center;
     }
 
+    #fs-table th {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      white-space: nowrap;
+      text-align: center;
+    }
+
     /* Stick the first two columns (category + criterion) to remain visible when scrolling */
     #eval-table th:nth-child(1),
     #eval-table td:nth-child(1) {
@@ -265,11 +291,28 @@
       max-width: 260px;
     }
 
+    #fs-table th:nth-child(1),
+    #fs-table td:nth-child(1) {
+      position: sticky;
+      left: 0;
+      background: var(--surface2);
+      z-index: 2;
+      min-width: 200px;
+      max-width: 260px;
+    }
+
     #eval-table td {
       padding: 0.45rem 0.75rem;
       border-bottom: 1px solid var(--border);
       vertical-align: middle;
     }
+
+    #fs-table td {
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
     /* Colour-coded category rows */
     .cat-header td {
       font-family: var(--mono);
@@ -334,6 +377,11 @@
       max-height: 600px;
       width: 100% !important;
     }
+
+    #bar-canvas {
+      max-width: 700px;
+      width: 100% !important;
+    }
     /*
     Add and style a Footer to provide extra info for users
     */
@@ -358,6 +406,7 @@ The next section creates section cards for the table of criteria and radar plot 
     <button class="btn" onclick="downloadCSV()">⬇ Export Table</button>
     <button class="btn" onclick="downloadChart()">⬇ Download Chart</button>
     <button class="btn btn-danger btn-sm" onclick="clearAllData()">✕ Clear All Data</button>
+    <button class="btn" onclick="toggleTheme()">🌗 Toggle Theme</button>
   </div>
 </div>
 <div class="main-content">
@@ -397,7 +446,7 @@ The next section creates section cards for the table of criteria and radar plot 
         <!-- Per-platform toggle chips rendered here by renderChips() -->
       </div>
       <span style="font-size:0.72rem;color:var(--text-muted)">
-        click WMS names on chart to hide/show
+        click WMS names on chart legend to hide/show
       </span>
     </div>
     <div class="chart-wrapper">
@@ -412,6 +461,48 @@ The next section creates section cards for the table of criteria and radar plot 
       </div>
     </div>
   </div>
+<!--Next table is for scoring Flexibility-Support-->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-title">03 / Flexibility-Support Scoring Table</span>
+      <span style="font-size:0.72rem;color:var(--text-muted)">
+        <b style="color:var(--accent2)">Read</b> = documentation review &nbsp;|&nbsp;
+        <b style="color:var(--accent)">Demo</b> = direct evaluation
+      </span>
+    </div>
+    <div class="table-scroll">
+      <table id="fs-table">
+        <thead>
+          <!-- renderTableHeader() replaces all rows in <thead> when platforms added-->
+        </thead>
+        <tbody id="fs-table-body">
+          <!-- Rows are injected by renderFsTableBody() -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-title">04 / Flexibility-Support Plot</span>
+      <div id="bar-chart-chips" class="platform-chips">
+        <!-- Per-platform toggle chips rendered here by renderChips() -->
+      </div>
+      <span style="font-size:0.72rem;color:var(--text-muted)">
+        click WMS names on chart legend to hide/show
+      </span>
+    </div>
+    <div class="chart-wrapper">
+      <!--
+        The <canvas> element that Chart.js draws into.
+        Its id="bar-canvas" is referenced in initBarChart().
+        Wrapped in a div with id="chart-container" so html2canvas
+        can capture just this area for the PNG download.
+      -->
+      <div id="bar-chart-container">
+        <canvas id="bar-canvas"></canvas>
+      </div>
+    </div>
+  </div>
 </div><!-- end of main-content -->
 <!--Add any important info for users here -->
 <div class="info-bar">
@@ -422,65 +513,77 @@ The next section creates section cards for the table of criteria and radar plot 
   -->
 <script>
   /* 
-  1. Category Names and Criteria Definitions for Evaluation Table
+  1. Category Names and Criteria Definitions for Evaluation Tables
   ---------------------------------------------------------------------------------------------
   CATEGORIES is the list of evaluation criteria by category
   Structured as:
     name (to display as the category header and radar plot label)
     criteria (array of five strings, each one is a criterion/row)
   */
+
   const CATEGORIES = [
   {
     name: "Sustainability",
     criteria: [
-      "Available for at least 1 year & maintained in last 6 months",
-      "Available for at least 5 years & maintained in last 12 months",
-      "Evidence of active user/developer community (e.g. forum, repo activity in last month)",
-      "Evidence of substantial user/contributor base (e.g. reported numbers, repo metrics)",
-      "Evidence of adoption in research/practice (e.g. citations, case studies)"
+      "S1: Available for at least 1 year & maintained in last 6 months",
+      "S2: Available for at least 5 years & maintained in last 12 months",
+      "S3: Evidence of active user/developer community (e.g. forum with activity in last month)",
+      "S4: Evidence of substantial user/contributor base (e.g. reported numbers)",
+      "S5: Evidence of adoption in research/practice (e.g. citations, case studies)"
     ]
   },
   {
     name: "Usability",
     criteria: [
-      "Users can create, edit and reuse workflows",
-      "Progress of workflows can be monitored",
-      "Error reports identify failed step and provide diagnostic information",
-      "No-code interface for workflow creation and use",
-      "Both no-code and code-based interfaces available"
+      "U1: Users can create, edit and reuse workflows",
+      "U2: Progress of workflows can be monitored",
+      "U3: Error reports identify failed step and enable re-entrancy",
+      "U4: No-code interface for workflow creation and use",
+      "U5: Both no-code and code-based interfaces available"
     ]
   },
   {
     name: "Learnability",
     criteria: [
-      "Documentation is available",
-      "Introductory tutorial or Getting Started advice available",
-      "Tools/components linked to relevant documentation",
-      "Domain or task specific training materials available",
-      "Interactive learning support available (e.g. forum, courses)"
-    ]
-  },
-  {
-    name: "Reproducibility",
-    criteria: [
-      "Details of analysis are recorded",
-      "Executable records of workflows are available",
-      "Workflows can be versioned",
-      "Human-readable reports can be generated",
-      "Previous versions of tools or execution environment are available"
+      "L1: Documentation is available",
+      "L2: Introductory tutorial or Getting Started advice available",
+      "L3: Tools/components linked to relevant documentation",
+      "L4: Domain or task specific training materials available",
+      "L5: Interactive learning support available (e.g. forum, courses)"
     ]
   },
   {
     name: "FAIRness",
     criteria: [
-      "Workflows and other items can be exported",
-      "Metadata can be added to data and workflows (e.g. tags, comments)",
-      "Guidance or tools provided to support FAIRification",
-      "Interoperable workflows can be imported/exported",
-      "Workflows can be shared through official/community library"
+      "F1: Workflows and other items can be exported",
+      "F2: Metadata can be added to data and workflows (e.g. tags, comments)",
+      "F3: Guidance or tools provided to support FAIRification",
+      "F4: Interoperable workflows can be imported/exported",
+      "F5: Workflows can be shared through official/community library"
     ]
-  }
+  },
+  {
+    name: "Reproducibility",
+    criteria: [
+      "R1: Details of analysis are recorded",
+      "R2: Code used in workflows is available",
+      "R3: Workflows can be versioned",
+      "R4: Human-readable reports can be generated",
+      "R5: Previous versions of tools or execution environment are available"
+    ]
+  },
+  
 ];
+
+/* And then a second list of criteria for the FS Evaluation Table */
+
+const FS_CRITERIA = [
+    "FS1: Openness",
+    "FS2: Control of Environment",
+    "FS3: Tools and Extensibility",
+    "FS4: Parameters",
+    "FS5: Support"
+  ]
   /*
   2. Colour Palette for Radar Plots
   --------------------------------------------------------------------------------------
@@ -498,10 +601,12 @@ The next section creates section cards for the table of criteria and radar plot 
   platforms - array of platforms objects: {id, name, color, hiddenFromPlot}
   scores - nested object: 
     scores[platformId][categoryIndex][criterionIndex] = {initial, final} where initial/final are one of: "yes" "no" "nd" ""
+    fs_scores[platformId][categoryIndex][criterionIndex] = {initial, final} where initial/final are one of: "F" "B" "S" "nd" ""
   */
   let state = {
   platforms: [],
-  scores: {}
+  scores: {},
+  fsScores: {}
 };
   /*
   4. Local Storage
@@ -542,10 +647,15 @@ function loadState() {
     
     const scoreMatrix = CATEGORIES.map(cat =>
     cat.criteria.map(() => ({ initial: "", final: "" }))
-  );
+);
+
+    const fsScoreMatrix = FS_CRITERIA.map(crit =>
+     ({ initial: "", final: "" })
+    );
 
   state.platforms.push({ id, name, color, hiddenFromPlot: false });
   state.scores[id] = scoreMatrix;
+  state.fsScores[id] = fsScoreMatrix;
 
   input.value = "";
   saveState();
@@ -557,6 +667,7 @@ function removePlatform(id) {
   if (!confirm(`Remove "${p.name}" from the evaluation entirely?`)) return;
   state.platforms = state.platforms.filter(p => p.id !== id);
   delete state.scores[id];
+  delete state.fsScores[id];
   saveState();
   render();
 }
@@ -565,13 +676,14 @@ function togglePlotVisibility(id) {
   const p = state.platforms.find(p => p.id === id);
   if (p) p.hiddenFromPlot = !p.hiddenFromPlot;
   saveState();
-  updateChart();         // refresh the chart only
+  updateChart();
+  updateBarChart();         // refresh the chart only
   renderChips();
 }
   /*
   6. Scores
   ---------------------------------------------------------------------------------------
-  Functions for getting and setting the scores.
+  Functions for getting and setting the scores for the main plot and for Flexibility-Support
   */
 /*
  * Get the score object for a specific cell.
@@ -580,6 +692,10 @@ function togglePlotVisibility(id) {
  */
 function getScore(platformId, catIdx, criIdx) {
   return state.scores[platformId][catIdx][criIdx];
+}
+
+function getFsScore(platformId, criIdx) {
+  return state.fsScores[platformId][criIdx];
 }
 
 /*
@@ -610,6 +726,25 @@ function setInitialScore(platformId, catIdx, criIdx, value) {
   updateChart();
 }
 
+function setInitialFsScore(platformId, criIdx, value) {
+  const cell = getFsScore(platformId, criIdx);
+  cell.initial = value;
+
+  // Auto-populate final score from initial if it's yes/no
+  if (value === "F" || value === "S" || value === "B") {
+    cell.final = value;
+  } else {
+    // nd or blank → clear final so user fills it in manually
+    cell.final = "";
+  }
+
+  saveState();
+  // Refresh only the affected final-score cell (cheaper than full re-render)
+  refreshFsFinalCell(platformId, criIdx);
+  updateFsScoreSummaryRow();
+  updateBarChart();
+}
+
 /*
  * Called when the user manually changes a FINAL score dropdown.
  * The user is allowed to override whatever was auto-filled.
@@ -624,9 +759,23 @@ function setFinalScore(platformId, catIdx, criIdx, value) {
   updateChart();
 }
 
+function setFsFinalScore(platformId, criIdx, value) {
+  getFsScore(platformId, criIdx).final = value;
+  saveState();
+  // Re-colour the select element to match its new value
+  const sel = document.getElementById(fsFinalCellId(platformId, criIdx));
+  if (sel) applySelectColor(sel, value);
+  updateFsScoreSummaryRow();
+  updateBarChart();
+}
+
 /* Deterministic DOM id for the final-score <select> of a given cell. */
 function finalCellId(platformId, catIdx, criIdx) {
   return `f_${platformId}_${catIdx}_${criIdx}`;
+}
+
+function fsFinalCellId(platformId, criIdx) {
+  return `f_${platformId}_${criIdx}`;
 }
 
 /*
@@ -643,6 +792,15 @@ function refreshFinalCell(platformId, catIdx, criIdx) {
   applySelectColor(sel, final);
 }
 
+function refreshFsFinalCell(platformId, criIdx) {
+  const sel = document.getElementById(fsFinalCellId(platformId, criIdx));
+  if (!sel) return;
+  const { initial, final } = getFsScore(platformId, criIdx);
+  sel.value = final;
+  sel.classList.toggle("auto-fill", ["F","B","S"].includes(initial) && initial === final);
+  applySelectColor(sel, final);
+}
+
 /*
  * Apply a CSS class to a <select> based on its value so the
  * Yes / No / ND colours are applied.
@@ -651,6 +809,9 @@ function applySelectColor(sel, value) {
   sel.classList.remove("val-yes", "val-no", "val-nd", "val-none");
   if (value === "yes")  sel.classList.add("val-yes");
   else if (value === "no")   sel.classList.add("val-no");
+  else if (value === "F")   sel.classList.add("val-no");
+  else if (value === "S")   sel.classList.add("val-yes");
+  else if (value === "B")   sel.classList.add("val-nd");
   else if (value === "nd")   sel.classList.add("val-nd");
   else                       sel.classList.add("val-none");
 }
@@ -670,6 +831,16 @@ function categoryScore(platformId, catIdx) {
 function allCategoryScores(platformId) {
   return CATEGORIES.map((_, catIdx) => categoryScore(platformId, catIdx));
 }
+
+// Calculate total F-S score
+
+function fsTotalScore(platformId) {
+  const scoreMap = { "S": 1, "B": 0, "F": -1 };
+  return state.fsScores[platformId].reduce((sum, cell) => {
+  return sum + (scoreMap[cell.final] ?? 0);
+    }, 0);
+  }
+
   /*
   8. Render the Evaluation Table
   --------------------------------------------------------------------
@@ -855,14 +1026,177 @@ function buildSelect(options, selected) {
   return sel;
 }
 
+  /* 8b. Render the FS Evaluation Table
+  --------------------------------------------------------------------
+  The first column is static and shows the criteria
+  Then we add columns to show the platform names, each with two sub-columns for the Read and Demo scores
+  renderFsTableHeader() rebuilds the header when platforms are added - over two rows to allow for the subheaders
+  */
+function renderFsTableHeader() {
+const thead = document.querySelector("#fs-table thead");
+thead.innerHTML = "";
+
+const row1 = document.createElement("tr");
+ 
+const thCri = document.createElement("th");
+thCri.textContent = "Criterion";
+thCri.rowSpan = 2;
+thCri.style.textAlign = "left";
+row1.appendChild(thCri);
+
+state.platforms.forEach(p => {
+    const th = document.createElement("th");
+    th.colSpan = 2;
+    th.style.color = p.color;
+    th.style.borderLeft = `2px solid ${p.color}33`;
+    th.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem">
+        <span style="width:7px;height:7px;border-radius:50%;background:${p.color};display:inline-block"></span>
+        ${escHtml(p.name)}
+        <button class="btn btn-sm btn-danger chip-btn"
+                onclick="removePlatform('${p.id}')"
+                title="Remove platform">✕</button>
+      </div>`;
+    row1.appendChild(th);
+  });
+ 
+  thead.appendChild(row1);
+
+  const row2 = document.createElement("tr");
+ 
+  state.platforms.forEach(p => {
+    const thI = document.createElement("th");
+    thI.textContent = "Read";
+    thI.style.borderLeft = `2px solid ${p.color}33`;
+    thI.style.color = "var(--accent2)";
+    row2.appendChild(thI);
+ 
+    const thF = document.createElement("th");
+    thF.textContent = "Demo";
+    thF.style.color = "var(--accent)";
+    row2.appendChild(thF);
+  });
+ 
+  thead.appendChild(row2);
+}
+
+function renderFsTableBody() {
+  const tbody = document.getElementById("fs-table-body");
+  tbody.innerHTML = "";
+ 
+  FS_CRITERIA.forEach((criterion, criIdx) => {
+ 
+      const tr = document.createElement("tr");
+ 
+      // Column 1: criterion name (small, muted — repeated for sticky column)
+      const tdCrit = document.createElement("td");
+      tdCrit.textContent = criterion;
+      tdCrit.style.color = "var(--text-muted)";
+      tdCrit.style.fontSize = "0.68rem";
+      tr.appendChild(tdCrit);
+ 
+      // Two columns per platform: Initial select + Final select
+      state.platforms.forEach(p => {
+        const cell = getFsScore(p.id, criIdx);
+ 
+        // ── Initial score cell ─────────────────────────────────────
+        const tdI = document.createElement("td");
+        tdI.style.borderLeft = `2px solid ${p.color}33`;
+        tdI.style.textAlign = "center";
+        const selI = buildFsSelect(["", "F", "B", "S", "nd"], cell.initial);
+        applySelectColor(selI, cell.initial);
+        selI.onchange = e => setInitialFsScore(p.id, criIdx, e.target.value);
+        tdI.appendChild(selI);
+        tr.appendChild(tdI);
+ 
+        // ── Final score cell ───────────────────────────────────────
+        const tdF = document.createElement("td");
+        tdF.style.textAlign = "center";
+        const selF = buildFsSelect(["", "F", "B", "S",], cell.final);
+        selF.id = fsFinalCellId(p.id, criIdx);
+        // Auto-fill indicator: light green tint if copied from initial
+        const isAutoFilled = (cell.initial === "F" || cell.initial === "S" || cell.initial === "B") && cell.initial === cell.final;
+        if (isAutoFilled) selF.classList.add("auto-fill");
+        applySelectColor(selF, cell.final);
+        selF.onchange = e => setFsFinalScore(p.id, criIdx, e.target.value);
+        tdF.appendChild(selF);
+        tr.appendChild(tdF);
+      });
+ 
+      tbody.appendChild(tr);
+    });
+ 
+    // ── Score summary row (bottom of each category) ─────────────────
+
+    const scoreRow = document.createElement("tr");
+    scoreRow.classList.add("fs-score-row");
+    scoreRow.id = `fs-score-row`;
+ 
+    const tdLabel = document.createElement("td");
+    tdLabel.colSpan = 1;
+    tdLabel.textContent = "F-S Score";
+    tdLabel.style.textAlign = "right";
+    scoreRow.appendChild(tdLabel);
+ 
+    state.platforms.forEach(p => {
+      // Blank spacer for Initial column
+      const tdBlank = document.createElement("td");
+      scoreRow.appendChild(tdBlank);
+      // Score for Final column
+      const tdScore = document.createElement("td");
+      const score = fsTotalScore(p.id);
+      tdScore.textContent = `${score}`;
+      tdScore.id = `fsscore_${p.id}`;
+      tdScore.style.color = scoreFsColor(score);
+      scoreRow.appendChild(tdScore);
+    });
+ 
+    tbody.appendChild(scoreRow);
+  }
+
+/*Colour in the total scores by value */
+function scoreFsColor(score) {
+  if (score >= 3)  return "var(--accent2)";   // strongly supportive
+  if (score >= -2) return "var(--accent4)";   // neutral
+  return "var(--accent3)";                   // more flexible
+}
+
+  /*Update only the changed scores/totals if a single change is made */
+function updateFsScoreSummaryRow() {
+  state.platforms.forEach(p => {
+    const td = document.getElementById(`fsscore_${p.id}`);
+    if (!td) return;
+    const score = fsTotalScore(p.id);
+    td.textContent = `${score}`;
+    td.style.color = scoreFsColor(score);
+  });
+}
+
+/*Options to select */
+function buildFsSelect(options, selected) {
+  const sel = document.createElement("select");
+  sel.classList.add("score-select");
+  const labels = { "": "–", F: "F", B: "B", S: "S", nd: "ND" };
+  options.forEach(val => {
+    const opt = document.createElement("option");
+    opt.value = val;
+    opt.textContent = labels[val] ?? val;
+    if (val === selected) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  return sel;
+}
+
 /*
 9. Platform Chips
 -----------------------------------------------------------
 These appear in the toolbar and under the chart title to show the platform name, colour, and options to show/hide on plot or remove platform completely.
 */
 function renderChips() {
-  const container = document.getElementById("chart-chips");
-  container.innerHTML = "";
+  ["chart-chips", "bar-chart-chips"].forEach(containerId => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
  
   state.platforms.forEach(p => {
     const chip = document.createElement("span");
@@ -881,6 +1215,7 @@ function renderChips() {
     `;
     container.appendChild(chip);
   });
+  });
 }
 /* 
 10. Radar Chart
@@ -894,8 +1229,23 @@ function initChart() {
   const ctx = document.getElementById("radar-canvas").getContext("2d");
  
   // ── Chart.js configuration ──────────────────────────────────────────
+
+  const canvasBgPlugin = {
+    id: "canvasBackground",
+    beforeDraw(chart) {
+      const isLight = document.body.classList.contains("light-theme");
+      const ctx2 = chart.canvas.getContext("2d");
+      ctx2.save();
+      ctx2.globalCompositeOperation = "destination-over";
+      ctx2.fillStyle = isLight ? "#f6f8fa" : "#161b22";
+      ctx2.fillRect(0, 0, chart.canvas.width, chart.canvas.height);
+      ctx2.restore();
+    }
+  };
+
   radarChart = new Chart(ctx, {
     type: "radar",
+    plugins: [canvasBgPlugin],   // register the background-fill plugin
  
     data: {
       // Labels = category names, displayed around the radar axes
@@ -979,6 +1329,144 @@ function updateChart() {
   radarChart.update();
 }
 
+//  For the Bar Chart of F-S scores
+
+// Chart is first initiated then updated when changes are made.
+
+let barChart = null;  // holds the Chart.js instance
+
+function initBarChart() {
+  const ctx = document.getElementById("bar-canvas").getContext("2d");
+
+  const canvasBgPlugin = {
+    id: "canvasBackground2",
+    beforeDraw(chart) {
+      const isLight = document.body.classList.contains("light-theme");
+      const ctx2 = chart.canvas.getContext("2d");
+      ctx2.save();
+      ctx2.globalCompositeOperation = "destination-over";
+      ctx2.fillStyle = isLight ? "#f6f8fa" : "#161b22";
+      ctx2.fillRect(0, 0, chart.canvas.width, chart.canvas.height);
+      ctx2.restore();
+    }
+  };
+
+  // Custom plugin: draws a vertical line from y=0 to each point (the lollipop stem)
+  const lollipopStemPlugin = {
+    id: "lollipopStems",
+    afterDatasetsDraw(chart) {
+      const ctx2 = chart.ctx;
+      const yScale = chart.scales.y;
+      const zeroY = yScale.getPixelForValue(0);
+
+      chart.data.datasets.forEach((dataset, i) => {
+        const meta = chart.getDatasetMeta(i);
+        if (meta.hidden) return;
+        meta.data.forEach(point => {
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.moveTo(point.x, zeroY);
+          ctx2.lineTo(point.x, point.y);
+          ctx2.strokeStyle = dataset.borderColor;
+          ctx2.lineWidth = 3;
+          ctx2.stroke();
+          ctx2.restore();
+        });
+      });
+    }
+  };
+
+  barChart = new Chart(ctx, {
+    type: "scatter",
+    plugins: [canvasBgPlugin, lollipopStemPlugin],
+
+    data: {
+      labels: [],
+      datasets: []
+    },
+
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      animation: { duration: 400, easing: "easeInOutQuart" },
+
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            font: { family: "'Space Mono', monospace", size: 11 },
+            color: "#8b949e",
+            boxWidth: 10
+          },
+          onClick(e, legendItem, legend) {
+            const i = legendItem.datasetIndex;
+            const meta = legend.chart.getDatasetMeta(i);
+            meta.hidden = !meta.hidden;
+            legend.chart.update();
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.y}`
+          }
+        }
+      },
+
+      scales: {
+        x: {
+          type: "category",
+          labels: [],   // kept in sync by updateBarChart
+          offset: true, // adds padding so points aren't flush against the axis edges
+          ticks: {
+            font: { family: "'Space Mono', monospace", size: 10 },
+            color: "#8b949e"
+          },
+          grid: { color: "#30363d" }
+        },
+        y: {
+          min: -5,
+          max: 5,
+          ticks: {
+            stepSize: 1,
+            font: { family: "'Space Mono', monospace", size: 9 },
+            color: "#8b949e"
+          },
+          grid: {
+            color: ctx => ctx.tick.value === 0 ? "#8b949e" : "#30363d",
+            lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1
+          }
+        }
+      }
+    }
+  });
+
+  updateBarChart();
+}
+
+function updateBarChart() {
+  if (!barChart) return;
+
+  const visible = state.platforms.filter(p => !p.hiddenFromPlot);
+  const labels = visible.map(p => p.name);
+
+  // Update the x-axis category labels
+  barChart.options.scales.x.labels = labels;
+
+  // One dataset per platform, one point positioned at that platform's x label
+  barChart.data.datasets = visible.map(p => ({
+    label: p.name,
+    data: [{ x: p.name, y: fsTotalScore(p.id) }],
+    backgroundColor: p.color,
+    borderColor: p.color,
+    pointRadius: 8,
+    pointHoverRadius: 10,
+    pointBorderColor: "#0d1117",
+    pointBorderWidth: 2
+  }));
+
+  barChart.update();
+}
+
 /*
 11. Master Render Function
 ------------------------------------------------------------
@@ -988,8 +1476,11 @@ The refreshFinalCell, updateScoreSummaryRow and updateChart functions can update
 function render() {
   renderTableHeader();
   renderTableBody();
+  renderFsTableHeader();
+  renderFsTableBody();
   renderChips();
   updateChart();
+  updateBarChart();
 }
 
 /*
@@ -1028,6 +1519,26 @@ const header = ["Category", "Criterion"];
     rows.push(scoreRow);
     rows.push([]);
   });
+
+  // FS section
+  rows.push([]); // blank separator
+  rows.push(["F-S Criterion", ""]);  // section header
+
+  FS_CRITERIA.forEach((cri, criIdx) => {
+    const row = ["Flexibility-Support", cri];
+    state.platforms.forEach(p => {
+      const cell = getFsScore(p.id, criIdx);
+      row.push(cell.initial || "", cell.final || "");
+    });
+    rows.push(row);
+  });
+
+  // FS total score row
+  const fsSummaryRow = ["", "F-S TOTAL SCORE"];
+  state.platforms.forEach(p => {
+    fsSummaryRow.push("", fsTotalScore(p.id));
+  });
+  rows.push(fsSummaryRow);
  
   // Convert to CSV string (handles commas in values via quoting)
   const csv = "\uFEFF" + rows.map(r =>
@@ -1038,17 +1549,34 @@ const header = ["Category", "Criterion"];
 }
 
 function downloadChart() {
-  const el = document.getElementById("chart-container");
-  html2canvas(el, { backgroundColor: "#161b22", scale: 2 }).then(canvas => {
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "workflow_radar.png";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-  });
+  const isLight = document.body.classList.contains("light-theme");
+  const bg = isLight ? "#f6f8fa" : "#161b22";
+
+  // Create a temporary off-screen canvas at the desired export resolution.
+  // Changing exportSize increases the output dimensions proportionally.
+  const exportSize = 3600;  // pixels — edit this to change export resolution
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width  = exportSize;
+  tempCanvas.height = exportSize;
+  const tempCtx = tempCanvas.getContext("2d");
+
+  // Fill the background colour first
+  tempCtx.fillStyle = bg;
+  tempCtx.fillRect(0, 0, exportSize, exportSize);
+
+  // Draw the Chart.js canvas (which is square) scaled up onto the temp canvas
+  const sourceCanvas = document.getElementById("radar-canvas");
+  tempCtx.drawImage(sourceCanvas, 0, 0, exportSize, exportSize);
+
+  // Export as PNG and trigger download
+  tempCanvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement("a");
+    a.href     = url;
+    a.download = "workflow_radar.png";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, "image/png");
 }
 
 /* Generic helper to trigger a browser file download from a string. */
@@ -1067,7 +1595,7 @@ function triggerDownload(filename, mimeType, content) {
 /*
 13. Utility
 ----------------------------------------------------------
-Functions to escape HTML special characters in the platform names from users and to wipe data
+Functions to escape HTML special characters in the platform names from users and to wipe data, toggle for light and dark themes
 */
 function escHtml(str) {
   return str
@@ -1080,8 +1608,43 @@ function escHtml(str) {
 function clearAllData() {
   if (!confirm("Clear ALL platforms and scores? This cannot be undone.")) return;
   localStorage.removeItem(STORAGE_KEY);
-  state = { platforms: [], scores: {} };
+  state = { platforms: [], scores: {}, fsScores: {} };
   render();
+}
+
+function toggleTheme() {
+  const body = document.body;
+  body.classList.toggle("light-theme");
+
+  // Save preference
+  const isLight = body.classList.contains("light-theme");
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+
+  updateChartTheme();
+}
+
+function updateChartTheme() {
+  if (!radarChart) return;
+
+  const isLight = document.body.classList.contains("light-theme");
+
+  if (isLight) {
+    radarChart.options.scales.r.grid.color = "#d0d7de";
+    radarChart.options.scales.r.angleLines.color = "#d0d7de";
+    radarChart.options.scales.r.pointLabels.color = "#1f2328";
+    radarChart.options.scales.r.ticks.color = "#656d76";
+
+    radarChart.options.plugins.legend.labels.color = "#1f2328";
+  } else {
+    radarChart.options.scales.r.grid.color = "#30363d";
+    radarChart.options.scales.r.angleLines.color = "#30363d";
+    radarChart.options.scales.r.pointLabels.color = "#e6edf3";
+    radarChart.options.scales.r.ticks.color = "#8b949e";
+
+    radarChart.options.plugins.legend.labels.color = "#8b949e";
+  }
+
+  radarChart.update();
 }
 
 /*
@@ -1094,8 +1657,15 @@ On page load:
 */
 document.addEventListener("DOMContentLoaded", () => {
   loadState();    // 1. restore saved data
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "light") {
+    document.body.classList.add("light-theme");
+  }
+
   render();       // 2. build table
   initChart();    // 3. create radar chart
+  initBarChart();    // 4. create bar chart
+  updateChartTheme(); // apply correct colours
 });
   
 </script>
