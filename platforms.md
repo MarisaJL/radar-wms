@@ -1,14 +1,12 @@
 # Platforms
 
-This file was generated from the original CSV (platforms.csv). I cleaned up website URLs by removing trailing punctuation and expanding truncated domains where it was safe to do so. If a row had a truncated or missing website in the source CSV (e.g. fields that ended with "[...]"), I left the Website cell blank — please let me know if you want me to fill those with best-guess URLs.
-
 | Platform | Cost | Access | Interaction | Scope | Website |
 |---|---|---|---|---|---|
 | Anduril | Free | Install | CLI (Code - Scala) | Bioinformatics | [https://csbi.ltdk.helsinki.fi/site/](https://csbi.ltdk.helsinki.fi/site/) |
 | Apache Airflow (+ Spark) | Free | Install - Python | Python (Code - Python) + web interface for monitoring workflows | General | [https://airflow.apache.org/](https://airflow.apache.org/) |
 | Arvados | Free (Paid support service) | Install | CLI or Workbench web app (Text- CWL) | Biomedical | [https://arvados.org/](https://arvados.org/) |
 | ASAP | Free * | Online | GUI/Web app | Single cell transcriptomics | [https://asap.epfl.ch/](https://asap.epfl.ch/) |
-| BioData Catalyst (SevenBridges + Terra) | Paid (for usage, storage) | Online (BDC Workspace connects to cloud providers) | GUI for Text-based workflows (CWL, WDL, Nextflow) + apps and interactive environments |  | 
+| BioData Catalyst (SevenBridges + Terra) | Paid (for usage, storage) | Online (BDC Workspace connects to cloud providers) | GUI for Text-based workflows (CWL, WDL, Nextflow) + apps and interactive environments | [https://biodatacatalyst.nhlbi.nih.gov/](https://biodatacatalyst.nhlbi.nih.gov/) | 
 | BioLegato | Free | Install | Text for creating GUIs (BioPCD) then GUI for setting parameters, running workflows | Bioinformatics | [https://github.com/bfristensky/BioLegato](https://github.com/bfristensky/BioLegato) |
 | BioQUEUE | Free | Install | GUI (web interface) with shell command like syntax for writing workflows within the GUI | Bioinformatics | [https://www.bioqueue.org/](https://www.bioqueue.org/) |
 | bpipe | Free | Install | CLI (Code - bpipe) | Bioinformatics | [https://docs.bpipe.org/](https://docs.bpipe.org/) |
@@ -20,14 +18,14 @@ This file was generated from the original CSV (platforms.csv). I cleaned up webs
 | Cosmos | Free | Install - Python | Code (Python) | Bioinformatics | [https://mizzou-cbmi.github.io/](https://mizzou-cbmi.github.io/) |
 | Cromwell | Free | Install | Text - WDL, run on CLI | Science | [https://cromwell.readthedocs.io/en/latest/](https://cromwell.readthedocs.io/en/latest/) |
 | cwltool | Free | Install - Python + optional console | Text - CWL, run in Python or on CLI | General | [https://cwltool.readthedocs.io/en/latest/](https://cwltool.readthedocs.io/en/latest/) |
-| CyVerse | Free * (moving towards subscription model) | Online | GUI - but with integrated development environments (e.g. JupyterLab, Rstudio, VSCode) and developers can customise or work in code |  | 
+| CyVerse | Free * (moving towards subscription model) | Online | GUI - but with integrated development environments (e.g. JupyterLab, Rstudio, VSCode) and developers can customise or work in code | [https://cyverse.org/](https://cyverse.org/) | 
 | DataJoint | Paid (DataJoint Python is free for local use) | Online - Cloud (Managed) or Install - Python | GUIs - option to create own pipelines in Python | General | [https://www.datajoint.com/](https://www.datajoint.com/) |
-| DNAnexus | Paid (Online platform storage and analysis) | Install tool for uploading data then use Online (Can also install to create workflows in CLI) | GUI (Web app) but can also work from CLI, Write workflows |  | 
+| DNAnexus | Paid (Online platform storage and analysis) | Install tool for uploading data then use Online (Can also install to create workflows in CLI) | GUI (Web app) but can also work from CLI, Write workflows | [https://www.dnanexus.com/](https://www.dnanexus.com/) | 
 | Eoulsan | Free | Install | Text - XML for workflows, launch workflows from command line | NGS | [https://www.outils.genomique.biologie.ens.fr/eoulsan/](https://www.outils.genomique.biologie.ens.fr/eoulsan/) |
 | FlowJo / SeqGeq | Paid (for Software license) | Install | GUI | Single cell and flow cytometry | [https://www.flowjo.com/](https://www.flowjo.com/) |
 | Galaxy | Free * | Online (Can Install) | GUI,but CLI option when installed and Interactive environments for code (e.g. Rstudio, JupyterLab) | Bioinformatics and beyond | [https://galaxyproject.org/](https://galaxyproject.org/) |
 | Geneious | Paid (Software license including cloud storage) | Install - Desktop App, linked to Cloud account | GUI, CLI option | NGS and antibody discovery | [https://www.geneious.com/](https://www.geneious.com/) |
-| GenePattern | Free * | Online (public server) but can also install (then use public server or own resources) | GUI, but programming environment (GenePattern Notebook) available | Genomics and Transcriptomic |  |
+| GenePattern | Free * | Online (public server) but can also install (then use public server or own resources) | GUI, but programming environment (GenePattern Notebook) available | Genomics and Transcriptomic | [https://www.genepattern.org/](https://www.genepattern.org/) |
 | GenPipes | Free # | Install (or use on some Digital Research Alliance Canada Servers) | CLI | Genomics | [https://genpipes.readthedocs.io/en/latest/](https://genpipes.readthedocs.io/en/latest/) |
 | Gwf | Free | Install - Python | Code (Python) | General | [https://github.com/gwforg/gwf](https://github.com/gwforg/gwf) |
 | JUDI | Free | Install - Python | Code - Python | Bioinformatics | [https://pyjudi.readthedocs.io/en/latest/](https://pyjudi.readthedocs.io/en/latest/) |
@@ -59,8 +57,3 @@ This file was generated from the original CSV (platforms.csv). I cleaned up webs
 | VarSeq | Paid (Software license, training, support) | Install -Desktop App | GUI | Genomics | [https://www.goldenhelix.com/products/VarSeq/](https://www.goldenhelix.com/products/VarSeq/) |
 | Watchdog | Free | Install | GUI | Large-scale experimental data | [https://github.com/klugem/watchdog](https://github.com/klugem/watchdog) |
 | Wings | Free | Install | GUI - Web app | Science | [https://wings-workflows.org/](https://wings-workflows.org/) |
-
-
-Notes:
-- I removed trailing punctuation from URLs (periods, commas) and clipped internal "[...]" markers left by the CSV export. Where the website cell was completely missing or truncated in a way that didn't clearly include a domain, I left the Website cell blank so I wouldn't guess incorrectly.
-- If you want me to fill the blank website fields with likely domains (I can look them up and confirm), say so and I will update the file.
