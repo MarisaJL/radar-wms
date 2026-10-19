@@ -1,0 +1,66 @@
+# Platforms
+
+This file was generated from the original CSV (platforms.csv). I cleaned up website URLs by removing trailing punctuation and expanding truncated domains where it was safe to do so. If a row had a truncated or missing website in the source CSV (e.g. fields that ended with "[...]"), I left the Website cell blank — please let me know if you want me to fill those with best-guess URLs.
+
+| Platform | Cost | Access | Interaction | Scope | Website |
+|---|---|---|---|---|---|
+| Anduril | Free | Install | CLI (Code - Scala) | Bioinformatics | [https://csbi.ltdk.helsinki.fi/site/](https://csbi.ltdk.helsinki.fi/site/) |
+| Apache Airflow (+ Spark) | Free | Install - Python | Python (Code - Python) + web interface for monitoring workflows | General | [https://airflow.apache.org/](https://airflow.apache.org/) |
+| Arvados | Free (Paid support service) | Install | CLI or Workbench web app (Text- CWL) | Biomedical | [https://arvados.org/](https://arvados.org/) |
+| ASAP | Free * | Online | GUI/Web app | Single cell transcriptomics | [https://asap.epfl.ch/](https://asap.epfl.ch/) |
+| BioData Catalyst (SevenBridges + Terra) | Paid (for usage, storage) | Online (BDC Workspace connects to cloud providers) | GUI for Text-based workflows (CWL, WDL, Nextflow) + apps and interactive environments |  | 
+| BioLegato | Free | Install | Text for creating GUIs (BioPCD) then GUI for setting parameters, running workflows | Bioinformatics | [https://github.com/bfristensky/BioLegato](https://github.com/bfristensky/BioLegato) |
+| BioQUEUE | Free | Install | GUI (web interface) with shell command like syntax for writing workflows within the GUI | Bioinformatics | [https://www.bioqueue.org/](https://www.bioqueue.org/) |
+| bpipe | Free | Install | CLI (Code - bpipe) | Bioinformatics | [https://docs.bpipe.org/](https://docs.bpipe.org/) |
+| CAVATICA | Paid (for usage, storage) | Online (Cloud) | GUI but can add CWL workflows | Pediatric oncology genomics | [https://www.cavatica.org/](https://www.cavatica.org/) |
+| Chipster | Free to install (Server is free for Finnish universities/government institutions, paid for others) # | Install - Desktop app (Online version available) | GUI | NGS | [https://chipster.csc.fi/](https://chipster.csc.fi/) |
+| CLC Genomics Workbench | Paid (for software license) | Install | GUI - Desktop app | Bioinformatics | [https://digitalinsights.qiagen.com/](https://digitalinsights.qiagen.com/) |
+| Closha/Bio-Express | Free * | Install - Desktop app (Can then run analysis in the cloud) | GUI workbench (Can write in Python, R or shell scripts within this) | Genomics | [https://www.kobic.re.kr/kobic/](https://www.kobic.re.kr/kobic/) |
+| Compi | Free | Install | Text (XML + Bash scripts, other languages within this) to create pipelines. CLI to set parameters and run workflows | Bioinformatics and data science | [https://www.sing-group.org/](https://www.sing-group.org/) |
+| Cosmos | Free | Install - Python | Code (Python) | Bioinformatics | [https://mizzou-cbmi.github.io/](https://mizzou-cbmi.github.io/) |
+| Cromwell | Free | Install | Text - WDL, run on CLI | Science | [https://cromwell.readthedocs.io/en/latest/](https://cromwell.readthedocs.io/en/latest/) |
+| cwltool | Free | Install - Python + optional console | Text - CWL, run in Python or on CLI | General | [https://cwltool.readthedocs.io/en/latest/](https://cwltool.readthedocs.io/en/latest/) |
+| CyVerse | Free * (moving towards subscription model) | Online | GUI - but with integrated development environments (e.g. JupyterLab, Rstudio, VSCode) and developers can customise or work in code |  | 
+| DataJoint | Paid (DataJoint Python is free for local use) | Online - Cloud (Managed) or Install - Python | GUIs - option to create own pipelines in Python | General | [https://www.datajoint.com/](https://www.datajoint.com/) |
+| DNAnexus | Paid (Online platform storage and analysis) | Install tool for uploading data then use Online (Can also install to create workflows in CLI) | GUI (Web app) but can also work from CLI, Write workflows |  | 
+| Eoulsan | Free | Install | Text - XML for workflows, launch workflows from command line | NGS | [https://www.outils.genomique.biologie.ens.fr/eoulsan/](https://www.outils.genomique.biologie.ens.fr/eoulsan/) |
+| FlowJo / SeqGeq | Paid (for Software license) | Install | GUI | Single cell and flow cytometry | [https://www.flowjo.com/](https://www.flowjo.com/) |
+| Galaxy | Free * | Online (Can Install) | GUI,but CLI option when installed and Interactive environments for code (e.g. Rstudio, JupyterLab) | Bioinformatics and beyond | [https://galaxyproject.org/](https://galaxyproject.org/) |
+| Geneious | Paid (Software license including cloud storage) | Install - Desktop App, linked to Cloud account | GUI, CLI option | NGS and antibody discovery | [https://www.geneious.com/](https://www.geneious.com/) |
+| GenePattern | Free * | Online (public server) but can also install (then use public server or own resources) | GUI, but programming environment (GenePattern Notebook) available | Genomics and Transcriptomic |  |
+| GenPipes | Free # | Install (or use on some Digital Research Alliance Canada Servers) | CLI | Genomics | [https://genpipes.readthedocs.io/en/latest/](https://genpipes.readthedocs.io/en/latest/) |
+| Gwf | Free | Install - Python | Code (Python) | General | [https://github.com/gwforg/gwf](https://github.com/gwforg/gwf) |
+| JUDI | Free | Install - Python | Code - Python | Bioinformatics | [https://pyjudi.readthedocs.io/en/latest/](https://pyjudi.readthedocs.io/en/latest/) |
+| Kepler | Free | Install - Desktop app | GUI | Science and engineering | [https://kepler-project.org/index.html](https://kepler-project.org/index.html) |
+| KNIME | Free (Paid version with Cloud storage, usage and support) | Install - Desktop app | GUI | General | [https://www.knime.com](https://www.knime.com) |
+| Luigi | Free | Install - Python | Code - Python with web interface for managing/monitoring workflows | General | [https://luigi.readthedocs.io/en/stable/index.html](https://luigi.readthedocs.io/en/stable/index.html) |
+| Maser | Free * (for non-profit) | Online (contact to ask about installable version) | GUI (can also register own pipelines written in code/text) | NGS | [https://cell-innovation.nig.ac.jp/maser/](https://cell-innovation.nig.ac.jp/maser/) |
+| NEAT | Free | Install | GUI or CLI | NGS | [https://github.com/pschorderet/NEAT](https://github.com/pschorderet/NEAT) |
+| Nextflow | Free | Install | Text - Nextflow (can include scripts in any language) then run from command line | Science | [https://www.nextflow.io/index.html](https://www.nextflow.io/index.html) |
+| NGOMICS-WF | Free | Install | CLI (Python, Linux / shell commands) | NGS | [https://github.com/weizhongli/ngomicswf](https://github.com/weizhongli/ngomicswf) |
+| NGSANE | Free | Install | CLI - bash with config file | NGS | [https://github.com/BauerLab/ngsane](https://github.com/BauerLab/ngsane) |
+| OpenBio-C | Free | Online | GUI (Web app) to create workflows which then download to run as bash scripts through CLI | Bioinformatics | [https://openbio.eu/](https://openbio.eu/) |
+| Pachyderm | Free | Install | CLI with GUI Console for workflow management | General | [https://docs.pachyderm.com/products/mldm/latest/](https://docs.pachyderm.com/products/mldm/latest/) |
+| Pegasus | Free | Install | API or text (YAML) file for creating workflows then execute through CLI, web dashboard for workflow monitoring | Science | [https://pegasus.isi.edu/](https://pegasus.isi.edu/) |
+| Pipeline Pilot | Paid (Software license, cloud computing options) | Install - Desktop App | GUI | Science and Engineering | [https://www.3ds.com/products/biovia/pipeline-pilot](https://www.3ds.com/products/biovia/pipeline-pilot) |
+| RapidMiner | Paid (Software license, option for cloud credits) | Install - Desktop App | GUI | General | [https://altair.com/altair-rapidminer](https://altair.com/altair-rapidminer) |
+| Ruffus | Free | Install - Python | Code - Python | Bioinformatics and beyond | [http://www.ruffus.org.uk/](http://www.ruffus.org.uk/) |
+| SciPipe | Free | Install | Code - Go, run from CLI | Bioinformatics and beyond | [https://scipipe.org/](https://scipipe.org/) |
+| SevenBridges (now Velsera) | Paid (Cloud usage) | Online | GUI with options to work in Rstudio, JupyterNotebook | Bioinformatics | [https://velsera.com/products/seven-bridges-platform/](https://velsera.com/products/seven-bridges-platform/) |
+| Shivom | Paid (Cloud usage) | Online | GUI | Bioinformatics | [https://www.shivom.io/](https://www.shivom.io/) |
+| Snakemake | Free | Install | Text - Snakemake (can include shell commands, code etc) - then run from CLI | Science | [https://snakemake.github.io/](https://snakemake.github.io/) |
+| SyQADA | Free | Install | CLI | Bioinformatics | [https://scheetlabsoftware.org/syqada/](https://scheetlabsoftware.org/syqada/) |
+| targets | Free | Install - R | Code - R | Statistics and data science | [https://docs.ropensci.org/targets/](https://docs.ropensci.org/targets/) |
+| Terra | Paid (Usage, storage) | Online - Cloud | GUI but can create methods from command line tools | Biomedical | [https://terra.bio/](https://terra.bio/) |
+| Tibanna | Free | Install | Code (CWL, Snakemake, Python, shell commands) | Genomics | [https://tibanna.readthedocs.io/en/latest/](https://tibanna.readthedocs.io/en/latest/) |
+| TOGGLe | Free | Install | CLI (Linux commands) | NGS | [https://github.com/SouthGreenPlatform/TOGGLE](https://github.com/SouthGreenPlatform/TOGGLE) |
+| UAP | Free | Install | CLI (Python) | Sequencing data | [https://github.com/yigbt/uap](https://github.com/yigbt/uap) |
+| UniPro UGENE | Free (Commercial support available) | Install - Desktop App | GUI with CLI options | Bioinformatics | [https://ugene.net/](https://ugene.net/) |
+| VarSeq | Paid (Software license, training, support) | Install -Desktop App | GUI | Genomics | [https://www.goldenhelix.com/products/VarSeq/](https://www.goldenhelix.com/products/VarSeq/) |
+| Watchdog | Free | Install | GUI | Large-scale experimental data | [https://github.com/klugem/watchdog](https://github.com/klugem/watchdog) |
+| Wings | Free | Install | GUI - Web app | Science | [https://wings-workflows.org/](https://wings-workflows.org/) |
+
+
+Notes:
+- I removed trailing punctuation from URLs (periods, commas) and clipped internal "[...]" markers left by the CSV export. Where the website cell was completely missing or truncated in a way that didn't clearly include a domain, I left the Website cell blank so I wouldn't guess incorrectly.
+- If you want me to fill the blank website fields with likely domains (I can look them up and confirm), say so and I will update the file.
